@@ -1,9 +1,9 @@
-
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 import time
 import openpyxl
+import pandas as pd
 
 # Initialize Chrome WebDriver
 driver = webdriver.Chrome()
@@ -12,7 +12,7 @@ driver = webdriver.Chrome()
 search_term = 'site:myshopify.com'
 target_links = 100
 
-# Open Google and search for Shopify websites
+# Open Bing and search for Shopify websites
 driver.get('https://www.google.com')
 search_box = driver.find_element(By.NAME, 'q')
 search_box.send_keys(search_term)
@@ -27,9 +27,11 @@ def extract_links():
     results = driver.find_elements(By.XPATH, '//a')
     for result in results:
         link = result.get_attribute('href')
-        # Only add valid Shopify links, avoiding Google-related links
+        # Only add valid Shopify links, avoiding bing-related links
         if link and "myshopify.com" in link and "google.com" not in link:
-            shopify_links.add(link)
+            # Get the base URL up to .com
+            base_link = link.split('.com')[0] + '.com' if '.com' in link else link
+            shopify_links.add(base_link)
 
 # Loop to paginate and collect links until the target is met or pages run out
 while len(shopify_links) < target_links:
@@ -41,7 +43,7 @@ while len(shopify_links) < target_links:
         next_button.click()
         time.sleep(2)  # Pause between pages to prevent being blocked
     except Exception as e:
-        print("No more pages available or blocked by Google.")
+        print("No more pages available or blocked by Bing.")
         break
 
 # Close the browser after completion
@@ -57,6 +59,14 @@ sheet['A1'] = 'Shopify Websites'  # Add header
 for i, link in enumerate(shopify_links, start=2):
     sheet[f'A{i}'] = link
 
-workbook.save("shopify_websites.xlsx")
+filename = "shopify_websites1.xlsx"
+workbook.save(filename)
 
-print(f"Collected by Dipaloke Biswas {len(shopify_links)} Shopify links and saved to shopify_websites.xlsx")
+print(f"Initial collection saved to {filename}")
+
+# Load the Excel file to remove duplicates
+df = pd.read_excel(filename)
+df.drop_duplicates(subset=['Shopify Websites'], inplace=True)  # Remove duplicates
+df.to_excel(filename, index=False)  # Overwrite the file without duplicates
+
+print(f"Removed duplicates. Final data saved to {filename}")
