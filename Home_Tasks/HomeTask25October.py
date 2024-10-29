@@ -12,7 +12,7 @@ driver = webdriver.Chrome()
 search_term = 'site:myshopify.com'
 target_links = 100
 
-# Open Bing and search for Shopify websites
+# Open Google and search for Shopify websites
 driver.get('https://www.google.com')
 search_box = driver.find_element(By.NAME, 'q')
 search_box.send_keys(search_term)
